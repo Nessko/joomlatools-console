@@ -18,7 +18,18 @@ class ListAll extends Command
 
   protected function execute(InputInterface $input, OutputInterface $output)
   {
+    $dest = './';
+    $pack = 'http://update.joomla.org/language/translationlist_3.xml'; // version 3.x
 
+    try {
+      if (!$this->_downloadLanguageList($dest, $pack))
+      {
+        throw new \Exception('Could not download language list XML.');
+      }
+    }catch (\Exception $e)
+    {
+      $this->_downloadLanguageList($dest, $pack);
+    }
   }
   
   public function _downloadLanguageList($dest, $pack)
