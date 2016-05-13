@@ -6,6 +6,7 @@ use Joomlatools\Console\Joomla\Bootstrapper;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use Joomlatools\Console\Command\Site;
@@ -18,17 +19,15 @@ class Language extends Site\AbstractSite
     parent::configure();
     $this->setName('language:install')
       ->setDescription('Install a language pack')
-      ->addOption(
-        'install',
-        null,
-        InputOption::VALUE_REQUIRED,
+      ->addArgiment(
+        'languages',
+        InputArgument::REQUIRED,
         'A comma separated list of languages to install'
       )
-      ->addOption(
+      ->addArgument(
         'site',
-        null,
-        InputOption::VALUE_REQUIRED,
-        'Site to apply to'
+        InputArgument::REQUIRED,
+        'Alphanumeric site name. Also used in the site URL with .dev domain'
       );
   }
 
