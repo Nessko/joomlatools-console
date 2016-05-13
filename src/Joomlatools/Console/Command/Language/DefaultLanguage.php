@@ -4,6 +4,7 @@ namespace Joomlatools\Console\Command\Site;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use Joomlatools\Console\Command\Site;
@@ -15,17 +16,15 @@ class DefaultLanguage
     parent::configure();
     $this->setName('language:default')
       ->setDescription('Install a language pack')
-      ->addOption(
+      ->addArgument(
         'default',
-        null,
-        InputOption::VALUE_REQUIRED,
+        InputOption::REQUIRED,
         'Language to be set as default'
       )
-      ->addOption(
+      ->addArgument(
         'site',
-        null,
-        InputOption::VALUE_REQUIRED,
-        'Site to apply to'
+        InputArgument::REQUIRED,
+        'Alphanumeric site name. Also used in the site URL with .dev domain'
       );
   }
 
