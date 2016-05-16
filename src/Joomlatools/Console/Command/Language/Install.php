@@ -49,19 +49,8 @@ class Install extends Command
     $lids = $this->input->get('cid', array(), 'array');
     JArrayHelper::toInteger($lids, array());
     $lids = 46;
-    if (!$lids)
-    {
-      // No languages have been selected
-      $app = JFactory::getApplication();
-      $app->enqueueMessage(JText::_('COM_INSTALLER_MSG_DISCOVER_NOEXTENSIONSELECTED'));
-    }
-    else
-    {
-      // Install selected languages
-      $model->install($lids);
-    }
 
-    $this->setRedirect(JRoute::_('index.php?option=com_installer&view=languages', false));
+    $model->install($lids);
     
     ob_end_flush();
   }
