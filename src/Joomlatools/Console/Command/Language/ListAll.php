@@ -13,7 +13,7 @@ class ListAll extends Command
   {
     parent::configure();
     $this->setName('language:list')
-      ->setDescription('List all usable languages')''
+      ->setDescription('List all usable languages');
   }
 
   protected function execute(InputInterface $input, OutputInterface $output)
