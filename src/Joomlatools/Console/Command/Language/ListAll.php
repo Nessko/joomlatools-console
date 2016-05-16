@@ -12,7 +12,7 @@ class ListAll extends Command
   protected function configure()
   {
     parent::configure();
-    $this->setName('site:list')
+    $this->setName('language:list')
       ->setDescription('List all usable languages')''
   }
 
