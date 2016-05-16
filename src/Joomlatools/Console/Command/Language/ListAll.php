@@ -6,6 +6,7 @@ use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Helper\Table;
 
 class ListAll extends Command
 {
@@ -18,7 +19,7 @@ class ListAll extends Command
 
   protected function execute(InputInterface $input, OutputInterface $output)
   {
-    $dest = './';
+    $dest = './languages.xml';
     $pack = 'http://update.joomla.org/language/translationlist_3.xml'; // version 3.x
 
     try {
@@ -30,6 +31,26 @@ class ListAll extends Command
     {
       $this->_downloadLanguageList($dest, $pack);
     }
+
+    $languageXML = new \DOMDocument();
+    $languageXML->load($dest);
+
+    $languagesNodes = $languageXML->documentElement;
+
+    $rows = array();
+    foreach($languagesNodes->getElementsByTagName('extension') as $language){
+      $rows[] = array(
+        $language->getAttribute('name'),
+        $language->getAttribute('version'),
+        $language->getAttribute('element')
+      );
+    }
+
+    $table = new Table($output);
+    $table
+      ->setHeaders(array('Language','Joomla! version','pckg'))
+      ->setRows($rows);
+    $table->render();
   }
   
   public function _downloadLanguageList($dest, $pack)
