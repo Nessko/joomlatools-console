@@ -1,5 +1,5 @@
 <?php
-namespace Joomlatools\Console\Command\Site;
+namespace Joomlatools\Console\Command\Language;
 
 use Symfony\Component\Console\Command\Command
 use Symfony\Component\Console\Input\ArrayInput;
