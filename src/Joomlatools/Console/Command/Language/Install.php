@@ -11,7 +11,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use Joomlatools\Console\Command\Site;
 
-class Language extends Site\AbstractSite
+class Install extends Site\AbstractSite
 {
   
   protected function configure()

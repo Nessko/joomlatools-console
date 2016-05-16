@@ -9,7 +9,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 use Joomlatools\Console\Command\Site;
 
-class DefaultLanguage
+class DefaultLanguage extends Command
 {
   protected function configure()
   {
