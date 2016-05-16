@@ -19,7 +19,7 @@ class Install extends Site\AbstractSite
     parent::configure();
     $this->setName('language:install')
       ->setDescription('Install a language pack')
-      ->addArgiment(
+      ->addArgument(
         'languages',
         InputArgument::REQUIRED,
         'A comma separated list of languages to install'
