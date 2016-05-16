@@ -33,7 +33,7 @@ class Language extends Site\AbstractSite
 
   protected function execute(InputInterface $input, OutputInterface $output)
   {
-
+    $this->installLanguagePack();
   }
 
   public function installLanguagePack($lang)
@@ -42,6 +42,26 @@ class Language extends Site\AbstractSite
 
     ob_start();
 
+    $model = $this->getModel('languages');
+
+    // Get array of selected languages
+    $lids = $this->input->get('cid', array(), 'array');
+    JArrayHelper::toInteger($lids, array());
+    $lids = 46;
+    if (!$lids)
+    {
+      // No languages have been selected
+      $app = JFactory::getApplication();
+      $app->enqueueMessage(JText::_('COM_INSTALLER_MSG_DISCOVER_NOEXTENSIONSELECTED'));
+    }
+    else
+    {
+      // Install selected languages
+      $model->install($lids);
+    }
+
+    $this->setRedirect(JRoute::_('index.php?option=com_installer&view=languages', false));
+    
     ob_end_flush();
   }
 

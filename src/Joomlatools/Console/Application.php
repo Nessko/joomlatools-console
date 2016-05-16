@@ -137,6 +137,10 @@ class Application extends \Symfony\Component\Console\Application
             new Command\Site\Install(),
             new Command\Site\Token(),
 
+            new Command\Language\Install(),
+            new Command\Language\ListAll(),
+            new Command\Language\DefaultLanguage(),
+
             new Command\Vhost\Create(),
             new Command\Vhost\Remove(),
 
