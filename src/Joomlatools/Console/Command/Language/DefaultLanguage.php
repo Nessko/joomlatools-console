@@ -19,7 +19,7 @@ class DefaultLanguage extends Command
       ->setDescription('Install a language pack')
       ->addArgument(
         'default',
-        InputOption::REQUIRED,
+        InputArgument::REQUIRED,
         'Language to be set as default'
       )
       ->addArgument(
