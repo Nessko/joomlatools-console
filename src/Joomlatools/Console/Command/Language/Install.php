@@ -1,6 +1,6 @@
 <?php
 
-namespace Joomlatools\Console\Command\Site;
+namespace Joomlatools\Console\Command\Language;
 
 use Joomlatools\Console\Joomla\Bootstrapper;
 use Symfony\Component\Console\Input\ArrayInput;
