@@ -34,7 +34,36 @@ class Install extends Command
 
   protected function execute(InputInterface $input, OutputInterface $output)
   {
-    $this->installLanguagePack();
+    $languages = $input->getArgument('languages');
+
+    $languagesArray = explode(',',$languages);
+
+    $this->_downloadLanguagePack($languagesArray);
+    $this->installLanguagePack($languagesArray);
+  }
+
+  protected function _downloadLanguagePackInfo($language){
+    $languageList = new \DOMDocument();
+    $languageList->load('./languages.xml');
+
+    $langInfoString = '';
+
+    foreach($languageList->getElementsByTagName('extension') as $languageLine)
+    {
+      if($languageLine->getAttribute('name') == $language){
+        $langInfoString = $languageLine->getAttribute('detailsurl');
+      }
+    }
+  }
+
+  public function downloadLanguagePack($languages){
+
+    foreach($languages as $language){
+      $languageNode = $languageList->getElementsByTagName('extension');
+      $languageInfo = $this->_downloadLanguagePackInfo($language);
+      $languageInfoDocument = new \DOMDocument();
+      $languageInfoDocument->load($languageInfo);
+    }
   }
 
   public function installLanguagePack($lang)
