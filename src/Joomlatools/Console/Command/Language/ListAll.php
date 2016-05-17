@@ -42,13 +42,14 @@ class ListAll extends Command
       $rows[] = array(
         $language->getAttribute('name'),
         $language->getAttribute('version'),
-        $language->getAttribute('element')
+        $language->getAttribute('element'),
+        $language->getAttribute('detailsurl')
       );
     }
 
     $table = new Table($output);
     $table
-      ->setHeaders(array('Language','Joomla! version','pckg'))
+      ->setHeaders(array('Language','Joomla! version','pckg', 'url'))
       ->setRows($rows);
     $table->render();
   }
