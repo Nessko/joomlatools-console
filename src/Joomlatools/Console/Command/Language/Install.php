@@ -39,7 +39,7 @@ class Install extends Command
     $languagesArray = explode(',',$languages);
 
     $this->_downloadLanguagePack($languagesArray);
-    $this->installLanguagePack($languagesArray);
+    $this->installLanguagePack($languagesArray,$input->getArgument('site'));
   }
 
   protected function _downloadLanguagePackInfo($language){
@@ -58,17 +58,42 @@ class Install extends Command
 
   public function downloadLanguagePack($languages){
 
-    foreach($languages as $language){
-      $languageNode = $languageList->getElementsByTagName('extension');
-      $languageInfo = $this->_downloadLanguagePackInfo($language);
-      $languageInfoDocument = new \DOMDocument();
-      $languageInfoDocument->load($languageInfo);
+    $languageNodes = $languageList->getElementsByTagName('extension');
+    $languageInfo = array();
+
+    foreach($languageNodes as $languageNode)
+    {
+      if(in_array($languageNode->getAttribute('name'),$languages))
+      {
+        if(!$this->_downloadFile(
+          './'.$languageNode->getAttribute('name'),
+          $languageNode->getAttribute('detailsurl')
+        ))
+        {
+          throw new \RuntimeException(sprintf('Couldn\'t download language info file for %s language!', $languageNode->getAttribute('name')));
+        }
+
+        $docXML = new \DOMDocument();
+        $docXML->load('./'.$languageNode->getAttribute('name'));
+
+        $updateList = $docXML->getElementsByTagName('update');
+
+        foreach($updateList as $update)
+        {
+          $nameNode = $update->getElementsByTagName('name');
+          if($nameNode->nodeValue == $languageNode->getAttribute('name'))
+          {
+            $downloadsNode = $update->getElementsByTagName('downloads');
+            $downloadURLNode = $downloadsNode->getElementByTagName('downloadurl');
+          }
+        }
+      }
     }
   }
 
-  public function installLanguagePack($lang)
+  public function installLanguagePack($lang,$site)
   {
-    $app = Bootstrapper::bootstrap($this->target_dir);
+    $app = Bootstrapper::bootstrap($site);
 
     ob_start();
 
@@ -84,7 +109,7 @@ class Install extends Command
     ob_end_flush();
   }
 
-  public function _downloadLanguagePack($dest, $list){
+  public function _downloadFile($dest, $list){
     $bytes = file_put_contents($dest, fopen($list));
 
     if ($bytes === false || $bytes == 0) {
