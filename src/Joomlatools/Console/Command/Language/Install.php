@@ -85,6 +85,11 @@ class Install extends Command
           {
             $downloadsNode = $update->getElementsByTagName('downloads');
             $downloadURLNode = $downloadsNode->getElementByTagName('downloadurl');
+
+            if( !$this->_downloadFile('./'.$languageNode->getAttribute('name').'.zip',$downloadURLNode->nodeValue))
+            {
+              throw new \RuntimeException(sprintf('Couldn\'t download language pack for %s language!', $languageNode->getAttribute('name')));
+            }
           }
         }
       }
