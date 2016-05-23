@@ -14,6 +14,12 @@ class ListAll extends Command
   {
     parent::configure();
     $this->setName('language:list')
+      ->addOption(
+        'download-only',
+        null,
+        InputOption::VALUE_NONE,
+        'Downloads only the info file.'
+      )
       ->setDescription('List all usable languages');
   }
 
@@ -22,23 +28,26 @@ class ListAll extends Command
     $dest = './languages.xml';
     $pack = 'http://update.joomla.org/language/translationlist_3.xml'; // version 3.x
 
-    try {
-      if (!$this->_downloadLanguageList($dest, $pack))
-      {
-        throw new \Exception('Could not download language list XML.');
-      }
-    }catch (\Exception $e)
-    {
-      $this->_downloadLanguageList($dest, $pack);
-    }
+    $this->downloadLanguageList($dest,$pack);
 
+    $rows = $this->parseList($dest);
+
+    $table = new Table($output);
+    $table
+      ->setHeaders(array('Language', 'Joomla! version', 'pckg', 'url'))
+      ->setRows($rows);
+    $table->render();
+  }
+
+  protected function parseList($fileXML)
+  {
     $languageXML = new \DOMDocument();
-    $languageXML->load($dest);
+    $languageXML->load($fileXML);
 
     $languagesNodes = $languageXML->documentElement;
 
     $rows = array();
-    foreach($languagesNodes->getElementsByTagName('extension') as $language){
+    foreach ($languagesNodes->getElementsByTagName('extension') as $language) {
       $rows[] = array(
         $language->getAttribute('name'),
         $language->getAttribute('version'),
@@ -47,16 +56,24 @@ class ListAll extends Command
       );
     }
 
-    $table = new Table($output);
-    $table
-      ->setHeaders(array('Language','Joomla! version','pckg', 'url'))
-      ->setRows($rows);
-    $table->render();
+    return $rows;
   }
-  
+
+  public function downloadLanguageList($dest = './languages.xml',$pack = 'http://update.joomla.org/language/translationlist_3.xml')
+  {
+    try {
+      if (!$this->_downloadLanguageList($dest, $pack)) {
+        throw new \Exception('Could not download language list XML.');
+      }
+    } catch
+    (\Exception $e) {
+      $this->_downloadLanguageList($dest, $pack);
+    }
+  }
+
   public function _downloadLanguageList($dest, $pack)
   {
-    $bytes = file_put_contents($dest, fopen($pack,'r'));
+    $bytes = file_put_contents($dest, fopen($pack, 'r'));
 
     if ($bytes === false || $bytes == 0) {
       return false;

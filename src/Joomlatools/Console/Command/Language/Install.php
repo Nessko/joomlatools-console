@@ -38,8 +38,33 @@ class Install extends Command
 
     $languagesArray = explode(',',$languages);
 
-    $this->_downloadLanguagePack($languagesArray);
+    if(!file_exists('./languages.xml'))
+    {
+
+      $command = new ListAll();
+      $command->downloadLanguageList();
+    }
+
+    if(!$this->downloadLanguagePacksInfo($languagesArray))
+    {
+      throw new \RuntimeException('Couldn\'t download language info files.');
+    }
+
+    $this->downloadLanguagePacks($languagesArray);
     $this->installLanguagePack($languagesArray,$input->getArgument('site'));
+  }
+
+  protected function downloadLanguagePacksInfo($languages)
+  {
+    foreach($languages as $language)
+    {
+      if(!$this->_downloadLanguagePackInfo($language))
+      {
+        throw new \RuntimeException(sprintf('Couln\'t download language info file for %s language.', $language));
+      }
+    }
+
+    return true;
   }
 
   protected function _downloadLanguagePackInfo($language){
@@ -50,16 +75,42 @@ class Install extends Command
 
     foreach($languageList->getElementsByTagName('extension') as $languageLine)
     {
+
       if($languageLine->getAttribute('name') == $language){
         $langInfoString = $languageLine->getAttribute('detailsurl');
+        break;
       }
+    }
+
+    if(empty($langInfoString))
+    {
+      throw new \RuntimeException('Language %s not in list.', $language);
+    }
+
+    if(!$this->_downloadFile('./'.$languageLine->getAttribute('name').'_langinfo.xml',$langInfoString))
+    {
+      throw new \RuntimeException('Couldn\'t download langinfo file for language \'%s\'', $language);
+    }
+
+    return true;
+  }
+
+  public function downloadLanguagePacks($languages)
+  {
+    foreach($languages as $language)
+    {
+      $this->downloadLanguagePack($language);
     }
   }
 
-  public function downloadLanguagePack($languages){
+  public function downloadLanguagePack($language){
+    $languageInfoXML = new \DOMDocument();
+    $languageInfoXML->load('./'.$language.'_langinfo.xml');
 
-    $languageNodes = $languageList->getElementsByTagName('extension');
+    $languageNodes = $languageInfoXML->getElementsByTagName('extension');
     $languageInfo = array();
+
+
 
     foreach($languageNodes as $languageNode)
     {
@@ -98,24 +149,16 @@ class Install extends Command
 
   public function installLanguagePack($lang,$site)
   {
+    return true;
     $app = Bootstrapper::bootstrap($site);
 
     ob_start();
-
-    $model = $this->getModel('languages');
-
-    // Get array of selected languages
-    $lids = $this->input->get('cid', array(), 'array');
-    JArrayHelper::toInteger($lids, array());
-    $lids = 46;
-
-    $model->install($lids);
     
     ob_end_flush();
   }
 
   public function _downloadFile($dest, $list){
-    $bytes = file_put_contents($dest, fopen($list));
+    $bytes = file_put_contents($dest, fopen($list,'R'));
 
     if ($bytes === false || $bytes == 0) {
       return false;
