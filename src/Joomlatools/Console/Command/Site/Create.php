@@ -133,6 +133,12 @@ EOF
                 null,
                 InputOption::VALUE_NONE,
                 'Prompt for configuration details'
+            )
+            ->addOption(
+                'skip-exists-check',
+                null,
+                InputOption::VALUE_NONE,
+                'Disable check if database exists'
             );
     }
 
@@ -168,6 +174,11 @@ EOF
                 }
             }
 
+            if ($input->getOption('skip-exists-check')) {
+                $arguments['--skip-exists-check'] = true;
+            }
+            $arguments['--skip-exists-check'] = true;
+            
             $command = new Install();
             $command->setApplication($this->getApplication());
             $command->run(new ArrayInput($arguments), $output);

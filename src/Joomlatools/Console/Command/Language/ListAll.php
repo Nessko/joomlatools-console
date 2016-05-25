@@ -59,15 +59,15 @@ class ListAll extends Command
     return $rows;
   }
 
-  public function downloadLanguageList($dest = './languages.xml',$pack = 'http://update.joomla.org/language/translationlist_3.xml')
+  public function downloadLanguageList($dest = 'languages.xml',$pack = 'http://update.joomla.org/language/translationlist_3.xml', $cacheDir = './cache/')
   {
     try {
-      if (!$this->_downloadLanguageList($dest, $pack)) {
+      if (!$this->_downloadLanguageList($cacheDir.$dest, $pack)) {
         throw new \Exception('Could not download language list XML.');
       }
     } catch
     (\Exception $e) {
-      $this->_downloadLanguageList($dest, $pack);
+      $this->_downloadLanguageList($cacheDir.$dest, $pack);
     }
   }
 

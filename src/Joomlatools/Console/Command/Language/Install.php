@@ -2,7 +2,6 @@
 
 namespace Joomlatools\Console\Command\Language;
 
-use Joomlatools\Console\Joomla\Bootstrapper;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
@@ -11,9 +10,14 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use Joomlatools\Console\Command\Site;
+use Joomlatools\Console\Command\Database;
+use Joomlatools\Console\Joomla\Bootstrapper;
 
-class Install extends Command
+use JFactory;
+
+class Install extends Database\AbstractDatabase
 {
+  protected $cacheDir;
   
   protected function configure()
   {
@@ -25,20 +29,36 @@ class Install extends Command
         InputArgument::REQUIRED,
         'A comma separated list of languages to install'
       )
-      ->addArgument(
-        'site',
-        InputArgument::REQUIRED,
-        'Alphanumeric site name. Also used in the site URL with .dev domain'
+      ->addOption(
+        'cache-dir',
+        null,
+        InputOption::VALUE_REQUIRED,
+        'Location for all downloaded files.'
+      )
+      ->addOption(
+        'skip-exists-check',
+        null,
+        InputOption::VALUE_NONE,
+        'Do not check if database already exists or not.'
       );
   }
 
   protected function execute(InputInterface $input, OutputInterface $output)
   {
+    if($input->getOption('cache-dir'))
+    {
+      $this->cacheDir = $input->getOption('cache-dir');
+      if(!file_exists('./'.$this->cacheDir))
+      {
+        mkdir('./'.$this->cacheDir);
+      }
+    }
+
     $languages = $input->getArgument('languages');
 
     $languagesArray = explode(',',$languages);
 
-    if(!file_exists('./languages.xml'))
+    if(!file_exists('./'.$this->cacheDir.'/languages.xml'))
     {
 
       $command = new ListAll();
@@ -51,7 +71,14 @@ class Install extends Command
     }
 
     $this->downloadLanguagePacks($languagesArray);
-    $this->installLanguagePack($languagesArray,$input->getArgument('site'));
+    if( $this->installLanguagePack($languagesArray,$input->getArgument('site')))
+    {
+      $output->writeln(sprintf('Language %s successfully installed.','Czech'));
+    }else
+    {
+      throw new \RuntimeException(sprintf('Couldn\'t install languages: %s', $languages));
+    }
+
   }
 
   protected function downloadLanguagePacksInfo($languages)
@@ -69,7 +96,7 @@ class Install extends Command
 
   protected function _downloadLanguagePackInfo($language){
     $languageList = new \DOMDocument();
-    $languageList->load('./languages.xml');
+    $languageList->load('./'.$this->cacheDir.'/languages.xml');
 
     $langInfoString = '';
 
@@ -87,7 +114,7 @@ class Install extends Command
       throw new \RuntimeException('Language %s not in list.', $language);
     }
 
-    if(!$this->_downloadFile('./'.$languageLine->getAttribute('name').'_langinfo.xml',$langInfoString))
+    if(!$this->_downloadFile('./'.$this->cacheDir.'/'.$languageLine->getAttribute('name').'_langinfo.xml',$langInfoString))
     {
       throw new \RuntimeException('Couldn\'t download langinfo file for language \'%s\'', $language);
     }
@@ -105,56 +132,61 @@ class Install extends Command
 
   public function downloadLanguagePack($language){
     $languageInfoXML = new \DOMDocument();
-    $languageInfoXML->load('./'.$language.'_langinfo.xml');
+    $languageInfoXML->load('./'.$this->cacheDir.'/'.$language.'_langinfo.xml');
+    $languageInfoXpath = new \DOMXPath($languageInfoXML);
 
-    $languageNodes = $languageInfoXML->getElementsByTagName('extension');
-    $languageInfo = array();
+    $lastVersion = $languageInfoXpath->query('/updates/update/version');
+    $maxVersion = '0.0.0';
+    $maxItem = null;
 
-
-
-    foreach($languageNodes as $languageNode)
+    foreach($lastVersion as $version)
     {
-      if(in_array($languageNode->getAttribute('name'),$languages))
-      {
-        if(!$this->_downloadFile(
-          './'.$languageNode->getAttribute('name'),
-          $languageNode->getAttribute('detailsurl')
-        ))
-        {
-          throw new \RuntimeException(sprintf('Couldn\'t download language info file for %s language!', $languageNode->getAttribute('name')));
-        }
-
-        $docXML = new \DOMDocument();
-        $docXML->load('./'.$languageNode->getAttribute('name'));
-
-        $updateList = $docXML->getElementsByTagName('update');
-
-        foreach($updateList as $update)
-        {
-          $nameNode = $update->getElementsByTagName('name');
-          if($nameNode->nodeValue == $languageNode->getAttribute('name'))
-          {
-            $downloadsNode = $update->getElementsByTagName('downloads');
-            $downloadURLNode = $downloadsNode->getElementByTagName('downloadurl');
-
-            if( !$this->_downloadFile('./'.$languageNode->getAttribute('name').'.zip',$downloadURLNode->nodeValue))
-            {
-              throw new \RuntimeException(sprintf('Couldn\'t download language pack for %s language!', $languageNode->getAttribute('name')));
-            }
-          }
-        }
+      if( version_compare($version->nodeValue, $maxVersion, '>') ){
+        $maxVersion = $version->nodeValue;
+        $maxItem = $version->parentNode;
       }
     }
+
+    $this->_downloadFile('./'.$this->cacheDir.'/'.$language.'_pack.zip',$maxItem->getElementsByTagName('downloadurl')->item(0)->nodeValue);
+
+    return true;
+  }
+
+  private function unpackToFolders($lang,$site)
+  {
+
   }
 
   public function installLanguagePack($lang,$site)
   {
-    return true;
-    $app = Bootstrapper::bootstrap($site);
+    $app = Bootstrapper::getApplication('./application/'.$site.'/');
 
     ob_start();
-    
+    $installer = $app->getInstaller();
+    $installer->discover();
+
+    require_once JPATH_ADMINISTRATOR . '/components/com_installer/models/discover.php';
+
+    $model = new \InstallerModelDiscover();
+    $model->discover();
+
+    $results = $model->getItems();
+
+    foreach($results  as $result)
+    {
+      $installer->discover_install($result->extension_id);
+    }
+
+    $language = JFactory::getLanguage();
+    $newLang = \JLanguage::getInstance('cs-CZ');
+    $newLang->setDefault('cs-CZ');
+    JFactory::$language = $newLang;
+    $app->loadLanguage($language = $newLang);
+    //$newLang->load('com_languages', JPATH_ADMINISTRATOR);
+
     ob_end_flush();
+
+    return true;
   }
 
   public function _downloadFile($dest, $list){

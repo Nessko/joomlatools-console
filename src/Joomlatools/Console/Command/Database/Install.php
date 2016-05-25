@@ -117,7 +117,7 @@ class Install extends AbstractDatabase
             throw new \RuntimeException(sprintf('Site %s not found', $this->site));
         }
 
-        if ($this->drop === false && $this->skip_check === false)
+        /*if ($this->drop === false && $this->skip_check === false)
         {
             $result = $this->_executeSQL(sprintf("SHOW DATABASES LIKE \"%s\"", $this->target_db));
 
@@ -125,7 +125,7 @@ class Install extends AbstractDatabase
                 throw new \RuntimeException(sprintf('A database with name %s already exists', $this->target_db));
             }
         }
-
+        */
         $sample_data = $input->getOption('sample-data');
         if ($sample_data)
         {
