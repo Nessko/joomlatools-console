@@ -134,7 +134,7 @@ class Install extends Database\AbstractDatabase
             }
         }
 
-        if ($input->getOption('interactive')) {
+        if ($input->getOption('skip-exists-check')) {
             $arguments['--skip-exists-check'] = true;
         }
 
