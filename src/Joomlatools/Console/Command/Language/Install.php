@@ -14,6 +14,7 @@ use Joomlatools\Console\Command\Database;
 use Joomlatools\Console\Joomla\Bootstrapper;
 
 use JFactory;
+use LanguagesControllerInstalled;
 
 class Install extends Database\AbstractDatabase
 {
@@ -41,6 +42,17 @@ class Install extends Database\AbstractDatabase
         InputOption::VALUE_NONE,
         'Do not check if database already exists or not.'
       );
+  }
+
+  protected function getCid($lang)
+  {
+    $document = new \DOMDocument();
+    $document->load('cache/languages.xml');
+
+    $documentXpath = new \DOMXPath($document);
+    $langNodes = $documentXpath->query('/extensionset/extension[@name=\''.$lang.'\']');
+    $langNode = $langNodes->item(0);
+    return mb_substr($langNode->getAttribute('element'),4);
   }
 
   protected function execute(InputInterface $input, OutputInterface $output)
@@ -71,12 +83,9 @@ class Install extends Database\AbstractDatabase
     }
 
     $this->downloadLanguagePacks($languagesArray);
-    if( $this->installLanguagePack($languagesArray,$input->getArgument('site')))
+    if( !$this->installLanguagePacks($languagesArray,$input->getArgument('site')))
     {
-      $output->writeln(sprintf('Language %s successfully installed.','Czech'));
-    }else
-    {
-      throw new \RuntimeException(sprintf('Couldn\'t install languages: %s', $languages));
+      throw new \RuntimeException(sprintf('Couldn\'t install languages.', $languages));
     }
 
   }
@@ -152,15 +161,114 @@ class Install extends Database\AbstractDatabase
     return true;
   }
 
-  private function unpackToFolders($lang,$site)
+  private function checkZipDir($path)
   {
+    $zip = zip_open($path);
+    $dirs = array();
+    while($zip_entry = zip_read($zip))
+    {
 
+      if( 0 == zip_entry_filesize($zip_entry))
+      {
+        $dirs[] = zip_entry_name($zip_entry);
+      }
+    }
+
+    if( !empty($dirs) ){
+      return true;
+    }
+
+    return false;
   }
 
-  public function installLanguagePack($lang,$site)
+  private function unpackToFolders($lang,$cid,$site)
+  {
+    $zipArchive = new \ZipArchive();
+    $zipArchive->open(sprintf('cache/%s_pack.zip',$lang));
+
+    exec('mkdir -p cache/'.$lang.'_pack');
+    $zipArchive->extractTO('cache/'.$lang.'_pack');
+
+    $dir = scandir('cache/'.$lang.'_pack/');
+    $copyRest = false;
+
+    foreach($dir as $key => $filename)
+    {
+      if( $filename == '.' or $filename == '..' )
+      {
+        continue;
+      }
+
+      if(preg_match('/.*admin.*\.zip/', $filename ) and $this->checkZipDir('cache/'.$lang.'_pack/'.$filename))
+      {
+        //CZ admin verze
+        $zipArchive->open('cache/'.$lang.'_pack/'.$filename);
+        $zipArchive->extractTo('cache/'.$lang.'_pack/');
+        $copyRest = true;
+      }elseif(preg_match('/.*admin.*\.zip/', $filename ) and !$this->checkZipDir('cache/'.$lang.'_pack/'.$filename)){
+        //SK admin verze
+        $zipArchive->open('cache/'.$lang.'_pack/'.$filename);
+        $zipArchive->extractTo('application/'.$site.'/administrator/language/'.$cid.'/');
+      }
+
+      if(preg_match('/.*site.*\.zip/', $filename) and $this->checkZipDir('cache/'.$lang.'_pack/'.$filename))
+      {
+        //CZ site verze
+        $zipArchive->open('cache/'.$lang.'_pack/'.$filename);
+        $zipArchive->extractTo('cache/'.$lang.'_pack/');
+        $copyRest = true;
+      }elseif(preg_match('/.*site.*\.zip/', $filename )  and !$this->checkZipDir('cache/'.$lang.'_pack/'.$filename)){
+        //SK site verze
+        $zipArchive->open('cache/'.$lang.'_pack/'.$filename);
+        $zipArchive->extractTo('application/'.$site.'/language/'.$cid.'/');
+      }
+    }
+
+    if( $this->checkZipDir(sprintf('cache/%s_pack.zip',$lang)) OR $copyRest)
+    {
+      // presunout slozky na mista
+      // admin_xx-XX
+      $adminFiles = scandir('cache/'.$lang.'_pack/admin_'.$cid.'/');
+      exec('mkdir -p application/'.$site.'/administrator/language/' . $cid . '/');
+      foreach($adminFiles as $key => $filename)
+      {
+        if( !is_dir('cache/'.$lang.'_pack/admin_'.$cid.'/'.$filename) ) {
+          copy('cache/' . $lang . '_pack/admin_' . $cid . '/' . $filename, 'application/'.$site.'/administrator/language/' . $cid . '/' . $filename);
+        }
+      }
+      // site_xx-XX
+      $siteFiles = scandir('cache/'.$lang.'_pack/site_'.$cid.'/');
+      exec('mkdir -p application/'.$site.'/language/' . $cid . '/');
+      foreach($siteFiles as $key => $filename)
+      {
+        if( !is_dir('cache/'.$lang.'_pack/site_'.$cid.'/'.$filename)) {
+          copy('cache/' . $lang . '_pack/site_' . $cid . '/' . $filename, 'application/'.$site.'/language/' . $cid . '/' . $filename);
+        }
+      }
+    }
+
+    return true;
+  }
+
+  public function installLanguagePacks($langs, $site)
+  {
+    foreach($langs as $lang)
+    {
+      $cid = $this->getCid($lang);
+      $this->unpackToFolders($lang, $cid, $site);
+    }
+
+    if(!$this->installLanguagePacksDiscover($site))
+    {
+      return false;
+    }
+
+    return true;
+  }
+
+  public function installLanguagePacksDiscover($site)
   {
     $app = Bootstrapper::getApplication('./application/'.$site.'/');
-
     ob_start();
     $installer = $app->getInstaller();
     $installer->discover();
@@ -174,16 +282,11 @@ class Install extends Database\AbstractDatabase
 
     foreach($results  as $result)
     {
-      $installer->discover_install($result->extension_id);
+      if(!$installer->discover_install($result->extension_id))
+      {
+        return false;
+      }
     }
-
-    $language = JFactory::getLanguage();
-    $newLang = \JLanguage::getInstance('cs-CZ');
-    $newLang->setDefault('cs-CZ');
-    JFactory::$language = $newLang;
-    $app->loadLanguage($language = $newLang);
-    //$newLang->load('com_languages', JPATH_ADMINISTRATOR);
-
     ob_end_flush();
 
     return true;
