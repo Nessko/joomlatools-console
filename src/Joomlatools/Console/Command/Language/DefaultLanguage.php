@@ -11,7 +11,9 @@ use Joomlatools\Console\Command\Database;
 use Joomlatools\Console\Joomla\Bootstrapper;
 
 use JFactory;
-use LanguagesControllerInstalled;
+use JLanguage;
+use InstallationModelLanguages;
+use JLoader;
 
 class DefaultLanguage extends Command
 {
@@ -53,17 +55,10 @@ class DefaultLanguage extends Command
   {
     $app = Bootstrapper::getApplication('./application/'.$site.'/');
     ob_start();
-    $language = JFactory::getLanguage();
-    $newLang = \JLanguage::getInstance($langCID);
-    $newLang->setDefault($langCID);
-    var_dump($language);
-    JFactory::$language = $newLang;
-    JFactory::getApplication()->loadLanguage($newLang);
-    //$newLang->load('com_languages', JPATH_ADMINISTRATOR);
-
-    $installed = new \LanguagesControllerInstalled();
-    $model = $installed->getModel('installed');
-    $model->switchAdminLanguage($langCID);
+    include_once('application/'.$site.'/_installation/model/languages.php');
+    $model = new InstallationModelLanguages;
+    $model->setDefault($langCID);
+    $model->setDefault($langCID, 'site');
     ob_end_flush();
   }
 }
