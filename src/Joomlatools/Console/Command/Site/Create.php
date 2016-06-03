@@ -145,7 +145,13 @@ EOF
                 null,
                 InputOption::VALUE_NONE,
                 'Disable the debug console'
-            );
+            )
+            ->addOption(
+                'su-password',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'Change the superuser password'
+          );;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -189,6 +195,23 @@ EOF
             $command->setApplication($this->getApplication());
             $command->run(new ArrayInput($arguments), $output);
         }
+
+        if( !empty($input->getOption('su-password')) ) {
+            $this->changeAdminPassword($input->getOption('su-password'));
+        }
+    }
+    
+    private function changeAdminPassword($password)
+    {
+        ob_start();
+        // password change for superuser - random password - todo: remake to input option
+        $user = JUser::getInstance(951);
+
+        $user->set('password',JUserHelper::hashPassword($password));
+        $user->save(true);
+        ob_end_flush();
+
+	      return true;
     }
 
     public function check(InputInterface $input, OutputInterface $output)

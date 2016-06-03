@@ -65,13 +65,6 @@ class DefaultLanguage extends Command
     $model = new InstallationModelLanguages;
     $model->setDefault($langCID);
     $model->setDefault($langCID, 'site');
-
-    // password change for superuser - random password - todo: remake to input option
-    $user = JUser::getInstance(951);
-    $pass = JUserHelper::genRandomPassword();
-
-    $user->set('password',JUserHelper::hashPassword($pass));
-    $user->save(true);
     
     ob_end_flush();
   }
