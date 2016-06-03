@@ -2,13 +2,23 @@
 namespace Joomlatools\Console\Command\Language;
 
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 use Joomlatools\Console\Command\Site;
+use Joomlatools\Console\Command\Database;
+use Joomlatools\Console\Joomla\Bootstrapper;
+
+use JFactory;
+use JLanguage;
+use InstallationModelLanguages;
+use JLoader;
+use ConfigModelConfig;
+use ConfigModelForm;
+use ConfigModelCms;
+use JUser;
+use JUserHelper;
 
 class DefaultLanguage extends Command
 {
@@ -31,6 +41,38 @@ class DefaultLanguage extends Command
 
   protected function execute(InputInterface $input, OutputInterface $output)
   {
+    $langCID = $this->getCid($input->getArgument('default'));
+    $this->setDefaultLang($langCID, $input->getArgument('site'));
+  }
 
+  protected function getCid($lang)
+  {
+    $document = new \DOMDocument();
+    $document->load('cache/languages.xml');
+
+    $documentXpath = new \DOMXPath($document);
+    $langNodes = $documentXpath->query('/extensionset/extension[@name=\''.$lang.'\']');
+    $langNode = $langNodes->item(0);
+    return mb_substr($langNode->getAttribute('element'),4);
+  }
+
+  protected function setDefaultLang($langCID, $site)
+  {
+    $app = Bootstrapper::getApplication('./application/'.$site.'/');
+    ob_start();
+    include_once('application/'.$site.'/_installation/model/languages.php');
+
+    $model = new InstallationModelLanguages;
+    $model->setDefault($langCID);
+    $model->setDefault($langCID, 'site');
+
+    // password change for superuser - random password - todo: remake to input option
+    $user = JUser::getInstance(951);
+    $pass = JUserHelper::genRandomPassword();
+
+    $user->set('password',JUserHelper::hashPassword($pass));
+    $user->save(true);
+    
+    ob_end_flush();
   }
 }

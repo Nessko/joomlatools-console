@@ -139,6 +139,12 @@ EOF
                 null,
                 InputOption::VALUE_NONE,
                 'Disable check if database exists'
+            )
+            ->addOption(
+                'disable-debug-console',
+                null,
+                InputOption::VALUE_NONE,
+                'Disable the debug console'
             );
     }
 

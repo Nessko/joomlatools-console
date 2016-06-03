@@ -76,6 +76,12 @@ class Install extends Database\AbstractDatabase
                 InputOption::VALUE_NONE,
                 'Do not check if database already exists or not.'
             )
+            ->addOption(
+              'disable-debug-console',
+              null,
+              InputOption::VALUE_NONE,
+              'Disable the Joomla! debug console.'
+            )
             ;
     }
 
@@ -105,9 +111,10 @@ class Install extends Database\AbstractDatabase
 
         $this->_enableWebInstaller($input, $output);
 
+        
+        
         $name = Util::isPlatform($this->target_dir) ? 'Joomla Platform application' : 'Joomla site';
         $output->writeln("Your new $name has been configured.");
-        $output->writeln("You can login using the following username and password combination: <info>admin</info>/<info>admin</info>.");
     }
 
     public function check(InputInterface $input, OutputInterface $output)
