@@ -50,6 +50,12 @@ class Configure extends AbstractDatabase
                 InputOption::VALUE_NONE,
                 'Prompt for configuration details'
             )
+            ->addOption(
+                'disable-debug-console',
+                null,
+                InputOption::VALUE_NONE,
+                'Disable the Joomla! debug console'
+            )
         ;
     }
 
@@ -90,7 +96,7 @@ class Configure extends AbstractDatabase
         }
     }
 
-    protected function _configureJoomlaCMS()
+    protected function _configureJoomlaCMS($input = null)
     {
         $source = $this->target_dir.'/_installation/configuration.php-dist';
         if (!file_exists($source)) {
@@ -118,6 +124,12 @@ class Configure extends AbstractDatabase
             $contents = preg_replace($pattern, '', $contents);
         };
 
+        if(!is_null($input) and $input->getOption('disable-debug-console')) {
+            $debug = '0';
+        }else{
+            $debug = '1';
+        }
+
         $replacements = array(
             'db'        => $this->target_db,
             'user'      => $this->mysql->user,
@@ -141,7 +153,7 @@ class Configure extends AbstractDatabase
             'sef_rewrite'   => '1',
             'unicodeslugs'  => '1',
 
-            'debug'     => '1',
+            'debug'     => $debug,
             'lifetime'  => '600',
             'tmp_path'  => $this->_default_values['tmp_path'],
             'log_path'  => $this->_default_values['log_path'],

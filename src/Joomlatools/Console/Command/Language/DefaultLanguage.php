@@ -14,6 +14,11 @@ use JFactory;
 use JLanguage;
 use InstallationModelLanguages;
 use JLoader;
+use ConfigModelConfig;
+use ConfigModelForm;
+use ConfigModelCms;
+use JUser;
+use JUserHelper;
 
 class DefaultLanguage extends Command
 {
@@ -56,9 +61,18 @@ class DefaultLanguage extends Command
     $app = Bootstrapper::getApplication('./application/'.$site.'/');
     ob_start();
     include_once('application/'.$site.'/_installation/model/languages.php');
+
     $model = new InstallationModelLanguages;
     $model->setDefault($langCID);
     $model->setDefault($langCID, 'site');
+
+    // password change for superuser - random password - todo: remake to input option
+    $user = JUser::getInstance(951);
+    $pass = JUserHelper::genRandomPassword();
+
+    $user->set('password',JUserHelper::hashPassword($pass));
+    $user->save(true);
+    
     ob_end_flush();
   }
 }
