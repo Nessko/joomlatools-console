@@ -92,7 +92,7 @@ class Configure extends AbstractDatabase
         if (Util::isPlatform($this->target_dir)) {
             $this->_configureJoomlaPlatform();
         } else {
-            $this->_configureJoomlaCMS();
+            $this->_configureJoomlaCMS($input);
         }
     }
 
@@ -154,6 +154,7 @@ class Configure extends AbstractDatabase
             'unicodeslugs'  => '1',
 
             'debug'     => $debug,
+            'debug_lang' => $debug,
             'lifetime'  => '600',
             'tmp_path'  => $this->_default_values['tmp_path'],
             'log_path'  => $this->_default_values['log_path'],

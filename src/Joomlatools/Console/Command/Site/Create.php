@@ -150,8 +150,8 @@ EOF
                 'su-password',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'Change the superuser password'
-          );;
+                'SU User password.'
+            );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output)
@@ -177,7 +177,7 @@ EOF
                 '--www'  => $this->www
             );
 
-            $optionalArgs = array('sample-data', 'symlink', 'projects-dir', 'interactive', 'mysql-login', 'mysql_db_prefix', 'mysql-host', 'mysql-port', 'mysql-database');
+            $optionalArgs = array('sample-data', 'symlink', 'projects-dir', 'interactive', 'mysql-login', 'mysql_db_prefix', 'mysql-host', 'mysql-port', 'mysql-database', 'disable-debug-console');
             foreach ($optionalArgs as $optionalArg)
             {
                 $value = $input->getOption($optionalArg);
@@ -189,29 +189,17 @@ EOF
             if ($input->getOption('skip-exists-check')) {
                 $arguments['--skip-exists-check'] = true;
             }
-            $arguments['--skip-exists-check'] = true;
+
+            if($input->getOption('su-password')) {
+                $arguments['--su-password'] = $input->getOption('su-password');
+            }
             
             $command = new Install();
             $command->setApplication($this->getApplication());
             $command->run(new ArrayInput($arguments), $output);
+
+
         }
-
-        if( !empty($input->getOption('su-password')) ) {
-            $this->changeAdminPassword($input->getOption('su-password'));
-        }
-    }
-    
-    private function changeAdminPassword($password)
-    {
-        ob_start();
-        // password change for superuser - random password - todo: remake to input option
-        $user = JUser::getInstance(951);
-
-        $user->set('password',JUserHelper::hashPassword($password));
-        $user->save(true);
-        ob_end_flush();
-
-	      return true;
     }
 
     public function check(InputInterface $input, OutputInterface $output)

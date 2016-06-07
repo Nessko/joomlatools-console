@@ -16,6 +16,10 @@ use Joomlatools\Console\Command;
 use Joomlatools\Console\Command\Database;
 use Joomlatools\Console\Command\Vhost;
 use Joomlatools\Console\Joomla\Util;
+use Joomlatools\Console\Joomla\Bootstrapper;
+
+use JUser;
+use JUserHelper;
 
 class Install extends Database\AbstractDatabase
 {
@@ -82,6 +86,12 @@ class Install extends Database\AbstractDatabase
               InputOption::VALUE_NONE,
               'Disable the Joomla! debug console.'
             )
+            ->addOption(
+                'su-password',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'SU User password.'
+            )
             ;
     }
 
@@ -115,6 +125,25 @@ class Install extends Database\AbstractDatabase
         
         $name = Util::isPlatform($this->target_dir) ? 'Joomla Platform application' : 'Joomla site';
         $output->writeln("Your new $name has been configured.");
+
+        if($input->getOption('su-password')) {
+            $password = $input->getOption('su-password');
+            $site = $input->getArgument('site');
+            $this->changeAdminPassword($password,$site);
+        }
+
+        $output->writeln("$site has SU: admin/$password");
+        
+    }
+
+    private function changeAdminPassword($password,$site)
+    {
+        $app = Bootstrapper::getApplication('./application/'.$site.'/');
+        ob_start();
+        $user = \JUser::getInstance(951);
+        $user->set('password',\JUserHelper::hashPassword($password));
+        $user->save();
+        ob_end_flush();
     }
 
     public function check(InputInterface $input, OutputInterface $output)
@@ -157,7 +186,7 @@ class Install extends Database\AbstractDatabase
             '--www'  => $this->www
         );
 
-        $optionalArgs = array('overwrite', 'mysql-login', 'mysql_db_prefix', 'mysql-host', 'mysql-port', 'mysql-database', 'mysql-driver', 'interactive');
+        $optionalArgs = array('overwrite', 'mysql-login', 'mysql_db_prefix', 'mysql-host', 'mysql-port', 'mysql-database', 'mysql-driver', 'interactive', 'disable-debug-console');
         foreach ($optionalArgs as $optionalArg)
         {
             $value = $input->getOption($optionalArg);
