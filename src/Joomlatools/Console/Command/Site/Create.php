@@ -145,6 +145,12 @@ EOF
                 null,
                 InputOption::VALUE_NONE,
                 'Disable the debug console'
+            )
+            ->addOption(
+                'su-password',
+                null,
+                InputOption::VALUE_REQUIRED,
+                'SU User password.'
             );
     }
 
@@ -171,7 +177,7 @@ EOF
                 '--www'  => $this->www
             );
 
-            $optionalArgs = array('sample-data', 'symlink', 'projects-dir', 'interactive', 'mysql-login', 'mysql_db_prefix', 'mysql-host', 'mysql-port', 'mysql-database');
+            $optionalArgs = array('sample-data', 'symlink', 'projects-dir', 'interactive', 'mysql-login', 'mysql_db_prefix', 'mysql-host', 'mysql-port', 'mysql-database', 'disable-debug-console');
             foreach ($optionalArgs as $optionalArg)
             {
                 $value = $input->getOption($optionalArg);
@@ -183,11 +189,16 @@ EOF
             if ($input->getOption('skip-exists-check')) {
                 $arguments['--skip-exists-check'] = true;
             }
-            $arguments['--skip-exists-check'] = true;
+
+            if($input->getOption('su-password')) {
+                $arguments['--su-password'] = $input->getOption('su-password');
+            }
             
             $command = new Install();
             $command->setApplication($this->getApplication());
             $command->run(new ArrayInput($arguments), $output);
+
+
         }
     }
 
