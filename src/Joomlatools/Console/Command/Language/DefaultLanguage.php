@@ -65,7 +65,6 @@ class DefaultLanguage extends Command
     $model = new InstallationModelLanguages;
     $model->setDefault($langCID);
     $model->setDefault($langCID, 'site');
-    
     ob_end_flush();
   }
 }
