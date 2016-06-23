@@ -26,7 +26,7 @@ class ListAll extends Command
   protected function execute(InputInterface $input, OutputInterface $output)
   {
     mkdir('cache');
-    $dest = './cache/languages.xml';
+    $dest = 'languages.xml';
     $pack = 'http://update.joomla.org/language/translationlist_3.xml'; // version 3.x
 
     $this->downloadLanguageList($dest,$pack);
