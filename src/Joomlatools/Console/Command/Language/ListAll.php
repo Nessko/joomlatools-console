@@ -40,10 +40,10 @@ class ListAll extends Command
     $table->render();
   }
 
-  protected function parseList($fileXML)
+  protected function parseList($fileXML, $cacheDir = './cache/')
   {
     $languageXML = new \DOMDocument();
-    $languageXML->load($fileXML);
+    $languageXML->load($cacheDir.$fileXML);
 
     $languagesNodes = $languageXML->documentElement;
 
@@ -72,7 +72,7 @@ class ListAll extends Command
     }
   }
 
-  public function _downloadLanguageList($dest, $pack, $cacheDir = './cache/')
+  public function _downloadLanguageList($dest, $pack)
   {
     $bytes = file_put_contents($cacheDir.$dest, fopen($pack, 'r'));
 
