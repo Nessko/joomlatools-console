@@ -117,7 +117,7 @@ class Install extends Database\AbstractDatabase
         break;
       }
     }
-    var_dump($langInfoString);
+
     if(empty($langInfoString))
     {
       throw new \RuntimeException(sprintf('Language %s not in list.', $language));
