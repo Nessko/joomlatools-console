@@ -72,9 +72,9 @@ class ListAll extends Command
     }
   }
 
-  public function _downloadLanguageList($dest, $pack)
+  public function _downloadLanguageList($dest, $pack, $cacheDir = './cache/')
   {
-    $bytes = file_put_contents($dest, fopen($pack, 'r'));
+    $bytes = file_put_contents($cacheDir.$dest, fopen($pack, 'r'));
 
     if ($bytes === false || $bytes == 0) {
       return false;
