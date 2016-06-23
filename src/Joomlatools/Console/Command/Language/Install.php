@@ -105,7 +105,7 @@ class Install extends Database\AbstractDatabase
 
   protected function _downloadLanguagePackInfo($language){
     $languageList = new \DOMDocument();
-    $languageList->load('./'.$this->cacheDir.'/languages.xml');
+    $languageList->load('./cache/languages.xml');
 
     $langInfoString = '';
 
@@ -123,7 +123,7 @@ class Install extends Database\AbstractDatabase
       throw new \RuntimeException('Language %s not in list.', $language);
     }
 
-    if(!$this->_downloadFile('./'.$this->cacheDir.'/'.$languageLine->getAttribute('name').'_langinfo.xml',$langInfoString))
+    if(!$this->_downloadFile('./cache/'.$languageLine->getAttribute('name').'_langinfo.xml',$langInfoString))
     {
       throw new \RuntimeException('Couldn\'t download langinfo file for language \'%s\'', $language);
     }
@@ -141,7 +141,7 @@ class Install extends Database\AbstractDatabase
 
   public function downloadLanguagePack($language){
     $languageInfoXML = new \DOMDocument();
-    $languageInfoXML->load('./'.$this->cacheDir.'/'.$language.'_langinfo.xml');
+    $languageInfoXML->load('./cache/'.$language.'_langinfo.xml');
     $languageInfoXpath = new \DOMXPath($languageInfoXML);
 
     $lastVersion = $languageInfoXpath->query('/updates/update/version');
@@ -156,7 +156,7 @@ class Install extends Database\AbstractDatabase
       }
     }
 
-    $this->_downloadFile('./'.$this->cacheDir.'/'.$language.'_pack.zip',$maxItem->getElementsByTagName('downloadurl')->item(0)->nodeValue);
+    $this->_downloadFile('./cache/'.$language.'_pack.zip',$maxItem->getElementsByTagName('downloadurl')->item(0)->nodeValue);
 
     return true;
   }
