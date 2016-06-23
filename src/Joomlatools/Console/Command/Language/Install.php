@@ -47,7 +47,7 @@ class Install extends Database\AbstractDatabase
   protected function getCid($lang)
   {
     $document = new \DOMDocument();
-    $document->load('cache/languages.xml');
+    $document->load('./cache/languages.xml');
 
     $documentXpath = new \DOMXPath($document);
     $langNodes = $documentXpath->query('/extensionset/extension[@name=\''.$lang.'\']');
