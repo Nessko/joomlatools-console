@@ -120,12 +120,12 @@ class Install extends Database\AbstractDatabase
     var_dump($langInfoString);
     if(empty($langInfoString))
     {
-      throw new \RuntimeException('Language %s not in list.', $language);
+      throw new \RuntimeException(sprintf('Language %s not in list.', $language));
     }
 
     if(!$this->_downloadFile('./cache/'.$languageLine->getAttribute('name').'_langinfo.xml',$langInfoString))
     {
-      throw new \RuntimeException('Couldn\'t download langinfo file for language \'%s\'', $language);
+      throw new \RuntimeException(sprintf('Couldn\'t download langinfo file for language \'%s\'', $language));
     }
 
     return true;
